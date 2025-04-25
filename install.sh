@@ -7,7 +7,7 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 # --- Configuration ---
 GITHUB_REPO="Maolipeng/rsync-tool"
-SCRIPT_NAME="rsync_tool.sh" # Script name in the repository
+SCRIPT_NAME="deploy.sh" # Script name in the repository
 COMMAND_NAME="rsynctool"    # Desired command name after installation
 REPO_BRANCH="main"          # Or "master" if that's your default branch
 

@@ -49,13 +49,13 @@
 **使用 `curl`:**
 
 ```bash
-curl -fsSL https://github.com/Maolipeng/rsync-tool/blob/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Maolipeng/rsync-tool/main/install.sh | bash
 ```
 
 **或使用 `wget`:**
 
 ```bash
-wget -qO- https://github.com/Maolipeng/rsync-tool/blob/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/Maolipeng/rsync-tool/main/install.sh | bash
 ```
 
 安装脚本将执行以下操作：
