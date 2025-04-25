@@ -108,6 +108,7 @@ get_server_info() {
             echo "错误: 未找到sshpass命令。请先安装sshpass。" >&2
             echo "安装命令: sudo apt-get install sshpass (Debian/Ubuntu)" >&2
             echo "或: sudo yum install sshpass (CentOS/RHEL)" >&2
+            echo "或: brew install hudochenkov/sshpass/sshpass (mac,默认通过 homebrew 安装)" >&2
             exit 1
         fi
 
