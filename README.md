@@ -1,32 +1,32 @@
-# RSYNC 文件传输工具 (增强版)
+# RSYNC 文件传输工具 (增强版) / Enhanced Rsync Transfer Tool
 
 这是一个增强型的 Bash 脚本，旨在简化使用 `rsync` 在不同系统间（本地、远程服务器）进行文件和目录传输的过程。它提供了一个交互式菜单，支持多种传输场景，并允许保存和重用传输配置。
 
 ## 主要特性 / Features
 
-*   **多种传输模式 / Multiple Transfer Modes:**
+*   **多种传输模式**
     *   本地到服务器 (上传 / Local to Remote - Upload)
     *   服务器到本地 (下载 / Remote to Local - Download)
     *   服务器到服务器 (远程互传 / Remote to Remote)
-*   **配置文件 / Configuration File:**
+*   **配置文件**
     *   自动创建 `servers.conf` 文件用于存储常用服务器和传输设置。
     *   启动时列出已保存的配置供快速选择。
     *   支持在配置中留空路径，在运行时提示输入。
-*   **交互式配置 / Interactive Setup:**
+*   **交互式配置**
     *   如果选择手动配置或配置文件不存在，脚本会引导用户完成所有必要设置。
-*   **灵活认证 / Flexible Authentication:**
+*   **灵活认证**
     *   支持 SSH 密钥认证 (推荐 / Recommended)。
     *   支持密码认证 (需要 `sshpass` / Requires `sshpass`).
-*   **用户友好 / User-Friendly:**
+*   **用户友好**
     *   清晰的菜单和提示信息。
     *   提供默认值简化输入 (如 SSH 端口 22, 用户名 root)。
     *   路径清理功能，处理拖放到终端时可能产生的引号和转义空格。
     *   传输前显示任务摘要供用户确认。
-*   **同步选项 / Sync Options:**
+*   **同步选项**
     *   可选择“完全同步”（使用 `--delete`，使目标与源完全一致）。
     *   可选择“增量更新”（仅添加/更新文件，不删除目标端额外文件）。
 *   **配置保存 / Configuration Saving:**
-    *   成功完成手动配置的传输后，可以选择将其保存到配置文件中以备后用。
+    *   成功完成手动配置的传输后，可以选择将其保存到配置文件中以备后用（密码不会被保存）。
 
 ## 先决条件 / Prerequisites
 
@@ -38,21 +38,73 @@
     *   **CentOS/RHEL/Fedora:** `sudo yum install sshpass` or `sudo dnf install sshpass`
     *   **macOS (Homebrew):** `brew install hudochenkov/sshpass/sshpass-keychain` 或 `brew install esolitos/ipa/sshpass` (根据 Homebrew 版本选择)
     *   **安全警告:** 使用 `sshpass` 会在进程列表中短暂暴露密码，不如 SSH 密钥安全。**强烈建议优先使用 SSH 密钥认证。**
+5.  **curl 或 wget:** 用于执行一键安装脚本。
 
 ## 安装 / Installation
 
-1.  **下载/保存脚本:** 将脚本内容保存到一个文件中，例如 `rsync_tool.sh`。
-2.  **授予执行权限:** 打开终端，导航到脚本所在目录，运行：
+### 一键安装 (推荐)
+
+您可以使用以下任一命令将 `rsync-tool` 安装为名为 `rsynctool` 的系统命令。此脚本会下载最新版本并将其安装到用户目录 `$HOME/.local/bin` 下。
+
+**使用 `curl`:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Maolipeng/rsync-tool/main/install.sh | bash
+```
+
+**或使用 `wget`:**
+
+```bash
+wget -qO- https://raw.githubusercontent.com/Maolipeng/rsync-tool/main/install.sh | bash
+```
+
+安装脚本将执行以下操作：
+
+1.  下载最新的 `rsync_tool.sh` 脚本。
+2.  将其放置在 `$HOME/.local/bin/rsynctool`。
+3.  授予执行权限。
+4.  检查 `$HOME/.local/bin` 是否在您的 `PATH` 环境变量中。如果不在，脚本会提示您如何添加（通常需要编辑 `~/.bashrc`、`~/.zshrc` 或 `~/.profile` 文件）。
+
+安装完成后，请打开一个新的终端窗口，或重新加载您的 Shell 配置文件 (例如运行 `source ~/.bashrc` 或 `source ~/.zshrc`)。之后，您就可以通过输入以下命令来运行此工具：
+
+```bash
+rsynctool
+```
+
+### 手动安装
+
+1.  **下载或克隆仓库:**
+    ```bash
+    git clone https://github.com/Maolipeng/rsync-tool.git
+    cd rsync-tool
+    ```
+    或者直接下载 `rsync_tool.sh` 文件。
+2.  **授予执行权限:**
     ```bash
     chmod +x rsync_tool.sh
     ```
+3.  **运行脚本:**
+    *   在当前目录运行: `./rsync_tool.sh`
+    *   **(可选) 移动到 PATH 目录:** 为了能在任何位置运行，可以将脚本移动到 `PATH` 环境变量包含的目录中 (例如需要 `sudo` 的 `/usr/local/bin`，或推荐的用户本地目录 `$HOME/.local/bin`)。
+      ```bash
+      # 示例: 使用用户本地 bin 目录 (如果不存在则创建)
+      mkdir -p "$HOME/.local/bin"
+      mv rsync_tool.sh "$HOME/.local/bin/rsynctool"
+      # 确保 $HOME/.local/bin 在你的 PATH 中
+      # (可能需要编辑 ~/.bashrc 或 ~/.zshrc 并添加: export PATH="$HOME/.local/bin:$PATH")
+      ```
 
 ## 使用方法 / Usage
 
-1.  **运行脚本:** 在终端中执行：
-    ```bash
-    ./rsync_tool.sh
-    ```
+1.  **运行脚本:**
+    *   如果通过一键安装或移动到 PATH：
+        ```bash
+        rsynctool
+        ```
+    *   如果手动安装在当前目录：
+        ```bash
+        ./rsync_tool.sh
+        ```
 2.  **选择配置:**
     *   如果 `servers.conf` 文件存在且包含有效配置，脚本会列出它们，并带有序号。输入相应的序号选择一个已保存的配置并按 Enter。
     *   输入 `0` (或直接按 Enter，因为 0 是默认值) 选择“手动配置新传输任务”。
@@ -81,7 +133,7 @@
 
 ## 配置文件 (`servers.conf`)
 
-*   **位置:** 此文件会自动创建在与 `rsync_tool.sh` 脚本相同的目录下。
+*   **位置:** 此文件会在您**首次**运行脚本的目录下自动创建，或者在保存第一个配置时创建。如果您通过 `rsynctool` 命令运行，它通常会在您的主目录 (`~`) 或运行命令的当前目录下寻找或创建 `servers.conf`。为了方便管理，建议在特定项目目录或统一位置运行脚本。
 *   **格式:** 这是一个纯文本文件，每行代表一个配置项。字段之间使用**竖线 (`|`)** 分隔。
 *   **字段定义 (共 16 个字段):**
 
@@ -124,7 +176,7 @@
     *   注释行以 `#` 开头。
     *   为了安全，强烈建议将密码字段 (8 和 15) 留空。脚本会在需要时提示输入。
 
-## 安全注意事项 / Security Considerations
+## 安全注意事项
 
 *   **密码认证:** 使用密码认证 (`sshpass`) 会在执行 `rsync` 或 `scp`/`ssh` 命令时将密码作为参数传递，这可能在系统的进程列表中被其他用户看到。这是不安全的。
 *   **SSH 密钥:** 使用 SSH 密钥对进行认证是更安全的选择。确保您的私钥文件 (`~/.ssh/id_rsa` 或其他) 权限设置为 `600` (仅所有者可读写)。
@@ -133,8 +185,10 @@
     *   如果**目标服务器**使用密码认证，临时脚本会包含 `sshpass` 命令，这意味着 `sshpass` 需要安装在**源服务器**上。
     *   如果**源服务器**使用密码认证，`sshpass` 需要安装在运行此工具的**本地机器**上，用于 `scp` 上传脚本和 `ssh` 执行脚本。
 
-## 故障排除 / Troubleshooting
+## 故障排除 
 
+*   **`command not found: rsynctool`:** 您可能没有将 `$HOME/.local/bin` 添加到 `PATH` 环境变量中，或者没有重新加载 shell 配置/打开新终端。请检查 `echo $PATH` 的输出，并根据安装脚本的提示操作。
+*   **`servers.conf: No such file or directory` 或找不到配置:** 配置文件 `servers.conf` 默认在运行脚本的当前目录下查找或创建。请确保您在正确的目录下运行 `rsynctool`，或者将 `servers.conf` 移动到您运行命令的位置。
 *   **`sshpass: command not found`:** 您选择了密码认证，但 `sshpass` 未安装。请参照 [先决条件](#先决条件--prerequisites) 部分进行安装。对于 `remote_to_remote`，请检查是在本地机器还是源服务器上缺少 `sshpass`。
 *   **`Permission denied (publickey,password)`:** SSH 连接失败。检查：
     *   服务器地址、端口、用户名是否正确。
@@ -147,3 +201,20 @@
     *   如果是远程路径，请确保您在远程服务器上的路径拼写正确且有权访问。
 *   **路径包含空格或特殊字符:** 脚本尝试清理拖放的路径，但手动输入的复杂路径可能需要您自己用引号括起来或进行转义。
 *   **配置文件格式错误:** 脚本在加载配置时会检查字段数量。如果提示 "字段数不足"，请检查 `servers.conf` 中对应行的 `|` 数量是否正确 (应有 15 个 `|`，构成 16 个字段)。
+
+## 卸载
+
+如果您是通过**一键安装脚本**安装的 `rsynctool`：
+
+```bash
+rm -f "$HOME/.local/bin/rsynctool"
+echo "rsynctool uninstalled."
+```
+
+如果您是**手动安装**到其他位置的，只需删除对应的脚本文件（例如 `rsynctool` 或 `rsync_tool.sh`）。
+
+**注意:** 卸载脚本**不会**删除您的 `servers.conf` 配置文件。如果您不再需要它，请手动删除该文件。
+
+## 贡献
+
+欢迎提出改进建议或报告问题。您可以通过本项目的 GitHub Issues 提交反馈或 Pull Requests。
