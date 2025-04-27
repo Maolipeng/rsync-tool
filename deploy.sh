@@ -181,6 +181,31 @@ perform_transfer() {
     # 设置rsync基本选项
     RSYNC_OPTIONS="-avz --progress $DELETE_OPTION"
 
+    # 询问是否需要排除文件夹
+    local EXCLUDE_OPTION=""
+    local EXCLUDE_INPUT
+    local IFS=',' # 设置分隔符为逗号
+    read -p "是否需要排除某些文件夹或文件? (y/n) [默认n]: " EXCLUDE_CHOICE
+    if [[ "$EXCLUDE_CHOICE" == "y" || "$EXCLUDE_CHOICE" == "Y" ]]; then
+        read -p "请输入要排除的模式 (多个模式用逗号分隔, 例如 'node_modules,.git,*.log'): " EXCLUDE_INPUT
+        # 去除首尾空格
+        EXCLUDE_INPUT=$(echo "$EXCLUDE_INPUT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        if [ -n "$EXCLUDE_INPUT" ]; then
+            for pattern in $EXCLUDE_INPUT; do
+                # 去除模式周围可能存在的空格
+                pattern=$(echo "$pattern" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                if [ -n "$pattern" ]; then
+                    # Corrected quoting for exclude pattern
+                    EXCLUDE_OPTION="$EXCLUDE_OPTION --exclude=$pattern"
+                fi
+            done
+        fi
+    fi
+    unset IFS # 恢复默认分隔符
+
+    # 将排除选项添加到RSYNC_OPTIONS
+    RSYNC_OPTIONS="$RSYNC_OPTIONS $EXCLUDE_OPTION"
+
     # 根据传输类型执行rsync
     case $TRANSFER_TYPE in
         local_to_remote)
@@ -202,6 +227,7 @@ perform_transfer() {
             fi
 
             # 执行rsync
+            echo "执行命令: rsync $RSYNC_OPTIONS -e \"$SSH_CMD\" \"$SRC_PATH\" \"$DST_USER@$DST_SERVER:$DST_PATH\"" >&2
             rsync $RSYNC_OPTIONS -e "$SSH_CMD" "$SRC_PATH" "$DST_USER@$DST_SERVER:$DST_PATH"
             rsync_exit_code=$?
             ;;
@@ -224,6 +250,7 @@ perform_transfer() {
             fi
 
             # 执行rsync
+            echo "执行命令: rsync $RSYNC_OPTIONS -e \"$SSH_CMD\" \"$SRC_USER@$SRC_SERVER:$SRC_PATH\" \"$DST_PATH\"" >&2
             rsync $RSYNC_OPTIONS -e "$SSH_CMD" "$SRC_USER@$SRC_SERVER:$SRC_PATH" "$DST_PATH"
             rsync_exit_code=$?
             ;;
@@ -268,6 +295,7 @@ perform_transfer() {
 # 自动生成的远程到远程rsync脚本 (目标使用密钥)
 
 # 执行rsync
+echo "在源服务器上执行: rsync $RSYNC_OPTIONS -e \"$DST_SSH_CMD\" \"$SRC_PATH\" \"$DST_USER@$DST_SERVER:$DST_PATH\"" >&2
 rsync $RSYNC_OPTIONS -e "$DST_SSH_CMD" "$SRC_PATH" "$DST_USER@$DST_SERVER:$DST_PATH"
 EOF
             else
@@ -285,6 +313,7 @@ if ! command -v sshpass >/dev/null 2>&1; then
     echo "错误: 源服务器 '${SRC_SERVER}' 上缺少 sshpass 命令，无法进行目标密码认证。" >&2
     exit 1
 fi
+echo "在源服务器上执行: sshpass -p '******' rsync $RSYNC_OPTIONS -e \"ssh -p $DST_SSH_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\" \"$SRC_PATH\" \"$DST_USER@$DST_SERVER:$DST_PATH\"" >&2
 sshpass -p '$DST_PASSWORD' rsync $RSYNC_OPTIONS -e "ssh -p $DST_SSH_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" "$SRC_PATH" "$DST_USER@$DST_SERVER:$DST_PATH"
 # Added SSH options to potentially avoid host key issues during automated run
 EOF
